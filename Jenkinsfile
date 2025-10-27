@@ -115,7 +115,7 @@ node {
         //def releaseNumber       = env.BRANCH_NAME.substring(1, 5)
         //def releaseNumberParts  = releaseNumber.split("[.]")
     
-        ISPW_Release = env.BRANCH_NAME.substring(0, 9)
+        ISPW_Release = ISPW_Application + "REL" + env.BRANCH_NAME.substring(7, 9)
     
         echo "ISPW_Release              : " + ISPW_Release
     
