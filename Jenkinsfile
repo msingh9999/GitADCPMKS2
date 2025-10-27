@@ -129,7 +129,7 @@ node {
     
         currentBuild.displayName = ISPW_Application + "/" + HCI_Token + ", Release: " + ISPW_Release
         
-        stage("Create ISPW Release"){
+        stage("Create Release"){
     
             ispwOperation (
                 connectionId:           Host_Connection, 
