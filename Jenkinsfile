@@ -8,6 +8,13 @@ import java.net.URL
 
 String ISPW_Application     = "MKS2"        // Change to your assigned application
 String HCI_Token            = "PFHMKS0"     // Change to your assigned ID
+String Host_Connection      = "de2ad7c3-e924-4dc2-84d5-d0c3afd3e756"
+String Jenkins_CES_Credentials = "PFHMKS0-CES"
+String ISPW_Runtime_Config  = "ICCGA"
+String ISPW_Assignment = ""
+String ISPW_Level = "STG"  // Prep prod level
+String Git_Credential_Id = "a7500faf-0dd3-42b5-8b00-0553524a79d2"
+String Git_Repo_Url = "https://github.com/msingh9999/GitADCPMKS2.git"
 
 println "branch: " + env.BRANCH_NAME
     
@@ -34,44 +41,192 @@ node {
     *feature1* => QA1, per-branch
     *feature2* => QA2, per-branch
     *feature3* => QA3, per-branch''',
-    connectionId: 'de2ad7c3-e924-4dc2-84d5-d0c3afd3e756', // CWCC
+    //connectionId: 'de2ad7c3-e924-4dc2-84d5-d0c3afd3e756', // CWCC
+    connectionId: "${Host_Connection}", // CWCC
     credentialsId: "${HCI_Token}",
-    gitCredentialsId: 'a7500faf-0dd3-42b5-8b00-0553524a79d2', // GHE testdrive
-    gitRepoUrl: 'https://github.com/msingh9999/GitADCPMKS2.git',
-    runtimeConfig: 'ICCGA', // CWCC
+    //gitCredentialsId: 'a7500faf-0dd3-42b5-8b00-0553524a79d2', // GHE testdrive
+    gitCredentialsId: "${Git_Credential_Id}", // GHE testdrive
+    //gitRepoUrl: 'https://github.com/msingh9999/GitADCPMKS2.git',
+    gitRepoUrl: "${Git_Repo_Url}",
+    //runtimeConfig: 'ICCGA', // CWCC
+    runtimeConfig: "${ISPW_Runtime_Config}", // CWCC
     stream: 'FTSDEMO'
   }
 
   stage('Mainframe Build')
   {
-    ispwOperation connectionId: 'de2ad7c3-e924-4dc2-84d5-d0c3afd3e756', // CWCC
+    ispwOperation connectionId: "${Host_Connection}", // CWCC
+    //ispwOperation connectionId: 'de2ad7c3-e924-4dc2-84d5-d0c3afd3e756', // CWCC
     consoleLogResponseBody: false,
-    credentialsId: 'PFHMKS0-CES', // CWCC
+    //credentialsId: 'PFHMKS0-CES', // CWCC
+    credentialsId: "${Jenkins_CES_Credentials}", // CWCC
     ispwAction: 'BuildTask',
     ispwRequestBody: '''buildautomatically = true'''
   }
 
- stage('Run Tests')
-  {
-    sleep(10)
-    println "TTT Tests successfull!"
+ if (env.BRANCH_NAME.startsWith("feature"))
+ {
+     stage('Run Tests')
+      {
+        sleep(10)
+        println "TTT Tests successfull!"
+      }
+      
+      stage('Retrieve Code Coverage')
+      {
+        sleep(5)
+        println "Retrieve code successfull!"
+      }
+    
+      stage('Run Sonar Analysis')
+      {
+        sleep(12)
+        println "Sonar analysis successfull!"
+      }
+      
+      //stage('Deploy to Runtime')
+      //{
+      //  sleep(7)
+      //  println "Deploy successfull!"
+      //}
   }
-  
-  stage('Retrieve Code Coverage')
+  if (env.BRANCH_NAME.startsWith("release"))
   {
-    sleep(5)
-    println "Retrieve code successfull!"
-  }
+        def continueRelease         = false
 
-  stage('Run Sonar Analysis')
-  {
-    sleep(12)
-    println "Sonar analysis successfull!"
-  }
-  
-  stage('Deploy to Runtime')
-  {
-    sleep(7)
-    println "Deploy successfull!"
+        echo "Paramters"
+        echo 'ISPW_Application          : ' + ISPW_Application        
+        echo 'ISPW_Assignment           : ' + ISPW_Assignment         
+        echo 'ISPW_Owner_Id             : ' + HCI_Token            
+        echo 'Host_Connection           : ' + Host_Connection          
+        echo 'Jenkins_CES_Credentials   : ' + Jenkins_CES_Credentials  
+        echo 'ISPW_Runtime_Config       : ' + ISPW_Runtime_Config     
+           
+    
+        stage("Manual Intervention"){
+    
+           //input 'Manual Intervention Point for Demo Purposes'
+           // Define a String parameter for user input
+                    ISPW_Assignment = input(
+                        id: 'userInputName',
+                        message: 'Please enter Container name:',
+                        parameters: [
+                            [$class: 'StringParameterDefinition', defaultValue: 'MKS2000020', description: 'Container Name', name: 'nameInput']
+                        ]
+                    )
+    
+        }
+    
+        dir('./') {
+            deleteDir()
+        }
+    
+        //def releaseNumber       = env.BRANCH_NAME.substring(1, 5)
+        //def releaseNumberParts  = releaseNumber.split("[.]")
+    
+        ISPW_Release = ISPW_Application + "REL" + env.BRANCH_NAME.substring(7, 9)
+    
+        echo "ISPW_Release              : " + ISPW_Release
+    
+        currentBuild.displayName = ISPW_Application + "/" + HCI_Token + ", Release: " + ISPW_Release
+        
+        stage("Create Release"){
+    
+            ispwOperation (
+                connectionId:           Host_Connection, 
+                credentialsId:          Jenkins_CES_Credentials, 
+                consoleLogResponseBody: true,             
+                ispwAction:             'CreateRelease', 
+                ispwRequestBody: """
+                    runtimeConfiguration=${ISPW_Runtime_Config}
+                    stream=FTSDEMO
+                    application=${ISPW_Application}
+                    subAppl=${ISPW_Application}
+                    releaseId=${ISPW_Release}
+                    description=RELEASE ${ISPW_Release} FOR GITFLOW APP ${ISPW_Application}
+                """
+            )
+        }
+        
+        stage("Transfer Tasks"){
+            
+            ispwOperation(
+                connectionId:           Host_Connection, 
+                credentialsId:          Jenkins_CES_Credentials, 
+                consoleLogResponseBody: true,             
+                ispwAction:             'TransferTask', 
+                ispwRequestBody:        """
+                    runtimeConfiguration=${ISPW_Runtime_Config}
+                    assignmentId=${ISPW_Assignment}
+                    level=${ISPW_Level}
+                    containerId=${ISPW_Release}
+                    containerType=R
+                """
+            )        
+        }
+        
+           stage("User Acceptance Test"){
+            sleep 10
+        }
+    
+    
+        stage("Manual Intervention"){
+    
+            input 'Manual Intervention Point for Demo Purposes'
+    
+        }
+    
+        stage("Promote Release to PROD"){
+            
+            ispwOperation(
+                connectionId:           Host_Connection, 
+                credentialsId:          Jenkins_CES_Credentials, 
+                consoleLogResponseBody: true,             
+                ispwAction:             'PromoteRelease', 
+                ispwRequestBody:        """
+                    runtimeConfiguration=${ISPW_Runtime_Config}
+                    releaseId=${ISPW_Release}
+                    level=STG                
+                """
+            )        
+        }
+    
+        stage("Decision"){
+    
+            def releaseStatus
+    
+            releaseStatus = input(
+                message: 'Select the status for the release from the options below and click "Proceed"', 
+                parameters: [
+                    choice(choices: ['Successful Release', 'Abort Release'], description: 'Options', name: 'releaseOption')]        
+            )
+    
+            if(releaseStatus == 'Successful Release'){
+                continueRelease = true
+            }
+            else{
+                continueRelease = false
+            }
+        }
+    
+        if(continueRelease){
+    
+            stage("Close Release"){
+    
+                ispwOperation(
+                    connectionId:           Host_Connection, 
+                    credentialsId:          Jenkins_CES_Credentials, 
+                    consoleLogResponseBody: true,             
+                    ispwAction:             'CloseRelease', 
+                    ispwRequestBody:        """
+                        runtimeConfiguration=${ISPW_Runtime_Config}
+                        releaseId=${ISPW_Release}
+                    """
+                )
+            }
+        }
+        else
+        {
+        }
   }
 }
