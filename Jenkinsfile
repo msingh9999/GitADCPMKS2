@@ -180,7 +180,13 @@ node {
             )        
         }
         
-           stage("User Acceptance Test"){
+        stage("Manual Intervention - Approve"){
+    
+            input 'Manual Intervention Point for Demo Purposes'
+    
+        }
+        
+        stage("User Acceptance Test"){
             sleep 10
         }
     
@@ -207,6 +213,13 @@ node {
             )        
         }
     
+       stage("Manual Intervention - Approve"){
+    
+            input 'Manual Intervention Point for Demo Purposes'
+    
+        }
+    
+          
         stage("Decision"){
     
             def releaseStatus
@@ -241,6 +254,13 @@ node {
                     """
                 )        
             }
+            
+            stage("Manual Intervention - Approve"){
+    
+            input 'Manual Intervention Point for Demo Purposes'
+    
+            }
+    
     
             stage("Close Release"){
     
