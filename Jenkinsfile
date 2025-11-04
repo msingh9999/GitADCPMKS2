@@ -165,6 +165,21 @@ node {
             )        
         }
         
+        stage("Deploy Release to STG"){
+            
+            ispwOperation(
+                connectionId:           Host_Connection, 
+                credentialsId:          Jenkins_CES_Credentials, 
+                consoleLogResponseBody: true,             
+                ispwAction:             'DeployRelease', 
+                ispwRequestBody:        """
+                    runtimeConfiguration=${ISPW_Runtime_Config}
+                    releaseId=${ISPW_Release}
+                    level=STG                
+                """
+            )        
+        }
+        
            stage("User Acceptance Test"){
             sleep 10
         }
@@ -175,6 +190,7 @@ node {
             input 'Manual Intervention Point for Demo Purposes'
     
         }
+        
     
         stage("Promote Release to PROD"){
             
@@ -210,6 +226,21 @@ node {
         }
     
         if(continueRelease){
+        
+            stage("Deploy Release to PROD"){
+            
+                ispwOperation(
+                    connectionId:           Host_Connection, 
+                    credentialsId:          Jenkins_CES_Credentials, 
+                    consoleLogResponseBody: true,             
+                    ispwAction:             'DeployRelease', 
+                    ispwRequestBody:        """
+                        runtimeConfiguration=${ISPW_Runtime_Config}
+                        releaseId=${ISPW_Release}
+                        level=PRD                
+                    """
+                )        
+            }
     
             stage("Close Release"){
     
