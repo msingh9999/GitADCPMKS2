@@ -200,7 +200,7 @@ node {
     
         stage("Manual Intervention"){
     
-            input 'Proceed with PROD'
+            input 'Proceed with promote to PROD'
     
         }
         
