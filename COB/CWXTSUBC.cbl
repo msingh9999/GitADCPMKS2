@@ -6,7 +6,7 @@
       *                                                                *
       *  THIS CALLED PROGRAM IS THE COBOL DEMO PROGRAM USED FOR        *
       *  XPEDITER/TSO TRAINING SESSIONS.MKS                            *
-      *  Updated comment - 01/13/26 - 003                              *
+      *  Updated comment - 03/27/26 - 001                              *
       *                                                                *
       ******************************************************************
        ENVIRONMENT DIVISION.
