@@ -15,7 +15,8 @@
                                                                         
 *********                                                               
 *********                                                               
-*********                                                               
+*********                                                               1122233
+*********                                                               1122233
        01  MGMT-RANGE        PIC 9(6)V99.                               
            88  M-RANGE1           VALUES ARE      1 THRU 100000.        
            88  M-RANGE2           VALUES ARE 100001 THRU 200000.        
