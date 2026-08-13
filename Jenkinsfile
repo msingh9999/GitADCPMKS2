@@ -39,7 +39,7 @@ node {
     branchMapping: '''*release* => STG, per-branch'
     bug* => EMR, per-branch
     *feature1* => QA1, per-branch
-    *feature2* => QA2, per-branch
+    *feature4* => QA2, per-branch
     *feature3* => QA3, per-branch''',
     //connectionId: 'de2ad7c3-e924-4dc2-84d5-d0c3afd3e756', // CWCC
     connectionId: "${Host_Connection}", // CWCC
