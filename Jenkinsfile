@@ -61,7 +61,9 @@ node {
     //credentialsId: 'PFHMKS0-CES', // CWCC
     credentialsId: "${Jenkins_CES_Credentials}", // CWCC
     ispwAction: 'BuildTask',
-    ispwRequestBody: '''buildautomatically = true'''
+    //ispwRequestBody: '''buildautomatically = true'''
+    ispwRequestBody: '''buildautomatically = true
+runtimeConfiguration = ICCGA'''
   }
 
  if (env.BRANCH_NAME.startsWith("feature"))
